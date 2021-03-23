@@ -1,10 +1,12 @@
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
+
 import dash_table
 import pandas as pd
 from dash.dependencies import Input, Output, State
-app = dash.Dash(__name__, title="2021 Dash Python App")
+app = dash.Dash(__name__, title="2021 Dash Python App",external_stylesheets=[dbc.themes.CERULEAN])
 markdown_text = '''
 # Some references
 @@ -9,11 +14,17 @@
