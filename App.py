@@ -21,9 +21,46 @@ df_Pos = df['Pos'].dropna().sort_values().unique()
 opt_Pos = [{'label': x, 'value': x} for x in df_Pos]
 df_Tm = df['Tm'].dropna().sort_values().unique()
 opt_Tm = [{'label': x, 'value': x} for x in df_Tm]
-
+sidebar = html.Div(
+    [
+        html.H2("Sidebar", className="display-4"),
+        html.Hr(),
+        html.P(
+            "Select data", className="lead"
+        ),
+        dbc.Nav(
+            [
+                dbc.NavLink("Home", href="/", active="exact"),
+                dbc.NavLink("NBA", href="/page-1", active="exact"),
+                dbc.NavLink("Diabetes", href="/page-2", active="exact"),
+            ],
+            vertical=True,
+            pills=True,
+        ),
+    ],
+    
+)
+content = html.Div(id="page-content", children=[])
 app.layout = html.Div([
-    html.H1(app.title),
+  dcc.Location(id="url"),
+    sidebar,
+    content 
+])
+
+
+@app.callback(
+    Output("page-content", "children"),
+    [Input("url", "pathname")]
+)
+def render_page_content(pathname):
+    if pathname == "/":
+        return [
+                html.H1('Intructions'
+                        )
+                ]
+    elif pathname == "/page-1":
+        return [
+             html.H1("NBA dataset"),
     dcc.Markdown(markdown_text),
      html.Label(["Select Position of the player",
         dcc.Dropdown('mydropdown', options=opt_Pos, value=opt_Pos[0]['value'])
@@ -32,14 +69,26 @@ app.layout = html.Div([
         dcc.Dropdown('mydropdown2', options=opt_Tm,
                      value=opt_Tm[0]['value'], multi=True)
     ]),
-    dash_table.DataTable(
+               dash_table.DataTable(
+                   
         id='my-table',
         columns=[{"name": i, "id": i} for i in df.columns],
         data=df.to_dict("records")
         )
-])
-
-
+                ]
+    elif pathname == "/page-2":
+        return [
+                html.H1('Diabetes')
+                        
+                ]
+    # If the user tries to reach a different page, return a 404 message
+    return dbc.Jumbotron(
+        [
+            html.H1("404: Not found", className="text-danger"),
+            html.Hr(),
+            html.P(f"The pathname {pathname} was not recognised..."),
+        ]
+    )
 @app.callback(
      Output('my-table', 'data'),
      Input('mydropdown', 'value'),
@@ -53,7 +102,6 @@ def update_data(mydropdown, mydropdown2):
 
 
     return filter.to_dict("records")
-
    
 if __name__ == '__main__':
  app.server.run(debug=True)
