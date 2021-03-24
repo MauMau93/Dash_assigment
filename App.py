@@ -2,7 +2,7 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
-
+import plotly.express as px
 import dash_table
 import pandas as pd
 from dash.dependencies import Input, Output, State
@@ -60,22 +60,34 @@ def render_page_content(pathname):
                 ]
     elif pathname == "/page-1":
         return [
-             html.H1("NBA dataset"),
-    dcc.Markdown(markdown_text),
-     html.Label(["Select Position of the player",
-        dcc.Dropdown('mydropdown', options=opt_Pos, value=opt_Pos[0]['value'])
-    ]),
-    html.Label(["Select Team of the player",
-        dcc.Dropdown('mydropdown2', options=opt_Tm,
-                     value=opt_Tm[0]['value'], multi=True)
-    ]),
-               dash_table.DataTable(
+             dcc.Tabs([
+                    dcc.Tab(label='Table', children=[
+                        html.H1("NBA dataset"),
+                        dcc.Markdown(markdown_text),
+                        html.Label(["Select Position of the player",
+                            dcc.Dropdown('mydropdown', options=opt_Pos, value=opt_Pos[0]['value'])
+                        ]),
+                        html.Label(["Select Team of the player",
+                            dcc.Dropdown('mydropdown2', options=opt_Tm,
+                                        value=opt_Tm[0]['value'], multi=True)
+                        ]),
+                        dash_table.DataTable(
                    
-        id='my-table',
-        columns=[{"name": i, "id": i} for i in df.columns],
-        data=df.to_dict("records")
-        )
-                ]
+                            id='my-table',
+                            columns=[{"name": i, "id": i} for i in df.columns],
+                            data=df.to_dict("records")
+                            )
+                    ]
+                ),
+                dcc.Tab(label='Plot', children=[
+            
+                dcc.Graph(id="graph", figure= px.scatter(df, x="PTS", y="MP", color="Pos"))
+                
+            
+        ])
+
+        ])
+    ]
     elif pathname == "/page-2":
         return [
                 html.H1('Diabetes')
