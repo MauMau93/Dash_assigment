@@ -43,13 +43,10 @@ max_pts = max(df['PTS'].dropna())
 table_tab = dash_table.DataTable(
     id='my-table2',
     columns=[{"name": i, "id": i} for i in df2.columns],
-    data=df.to_dict("records")
+    data=df2.to_dict("records")
 )
-graph_tab = dcc.Graph(id="graph2",
-                      figure=px.scatter(df2, x="Glucose", y="BloodPressure", color="Outcome",
-                                        # color_discrete_sequence=px.colors.qualitative.G10
-                                        color_discrete_map=col_Outcome)
-
+graph_tab = dcc.Graph(id="graph2"
+                      
                       )
 
 
@@ -76,6 +73,7 @@ content = html.Div(id="page-content", children=[])
 app.layout = html.Div([
     dcc.Location(id="url"),
     sidebar,
+    html.Div(id='data', style={'display': 'none'}),
     content
 ])
 
@@ -130,7 +128,11 @@ def render_page_content(pathname):
         ]
     elif pathname == "/page-2":
         return [
+            html.Label(["Select diabetes or not:", 
+            dcc.Dropdown('my-dropdown3', options= opt_Outcome, value= [opt_Outcome[0]['value']])
+        ]),
             html.H1('Diabetes'),
+            
             dcc.Tabs(id="tabs", value='tab-t', children=[
                 dcc.Tab(label='Table', value='tab-t'),
                 dcc.Tab(label='Graph', value='tab-g'),
@@ -157,8 +159,21 @@ def update_data(mydropdown, mydropdown2):
         filter = df[(df['Pos'] == mydropdown) & (df['Tm'].isin(mydropdown2))]
     else:
         filter = df[(df['Pos'] == mydropdown) & (df['Tm'] == mydropdown2)]
-
     return filter.to_dict("records")
+
+@ app.callback(
+    Output('graph', 'figure'),
+    Input('rangeSlider', 'value'))
+def update_graph(rangeSlider):
+    flt = df[(df['PTS'] >= rangeSlider[0])
+             & (df['PTS'] <= rangeSlider[1])]
+    return px.scatter(flt, x="PTS", y="MP", color="Pos")
+
+
+
+
+
+
 
 
 @app.callback(Output('tabs-content', 'children'),
@@ -169,7 +184,6 @@ def render_content(tab):
     elif tab == 'tab-g':
         return graph_tab
 
-
 @app.callback(
     Output('my-table2', 'data'),
     Input('data', 'children'),
@@ -179,8 +193,6 @@ def update_table(data, tab):
         return None
     dff = pd.read_json(data, orient='split')
     return dff.to_dict("records")
-
-
 @app.callback(
     Output('graph2', 'figure'),
     Input('data', 'children'),
@@ -192,14 +204,19 @@ def update_graph2(data, tab):
                       # color_discrete_sequence=px.colors.qualitative.G10
                       color_discrete_map=col_Outcome)
 
+@app.callback(Output('data', 'children'), 
+    Input('my-dropdown3', 'value'))
+def update(values):
+     flr = df2[df2['Outcome'] == values]
 
-@ app.callback(
-    Output('graph', 'figure'),
-    Input('rangeSlider', 'value'))
-def update_graph(rangeSlider):
-    flt = df[(df['PTS'] >= rangeSlider[0])
-             & (df['PTS'] <= rangeSlider[1])]
-    return px.scatter(flt, x="PTS", y="MP", color="Pos")
+     # more generally, this line would be
+     # json.dumps(cleaned_df)
+     return flr.to_json(date_format='iso', orient='split')
+
+
+
+
+
 
 
 if __name__ == '__main__':
