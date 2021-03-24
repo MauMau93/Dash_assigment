@@ -20,15 +20,38 @@ markdown_text = '''
 df_url = 'https://raw.githubusercontent.com/JavierEA1/nbadataset/main/DatosNBA.csv'
 df = pd.read_csv(df_url, sep=';')
 
+df_url2 = 'https://raw.githubusercontent.com/MauMau93/data_diabetes/main/data_diabetes.csv'
+df2 = pd.read_csv(df_url2, sep=',')
+
+
 df_Pos = df['Pos'].dropna().sort_values().unique()
 opt_Pos = [{'label': x, 'value': x} for x in df_Pos]
 df_Tm = df['Tm'].dropna().sort_values().unique()
 opt_Tm = [{'label': x, 'value': x} for x in df_Tm]
+df_Outcome = df2['Outcome'].dropna().sort_values().unique()
+opt_Outcome = [{'label': x, 'value': x} for x in df_Outcome]
+
 
 col_Pos = {x: px.colors.qualitative.G10[i] for i, x in enumerate(df_Pos)}
+col_Outcome = {x: px.colors.qualitative.G10[i]
+               for i, x in enumerate(df_Outcome)}
 
 min_pts = min(df['PTS'].dropna())
 max_pts = max(df['PTS'].dropna())
+
+
+table_tab = dash_table.DataTable(
+    id='my-table2',
+    columns=[{"name": i, "id": i} for i in df2.columns],
+    data=df.to_dict("records")
+)
+graph_tab = dcc.Graph(id="graph2",
+                      figure=px.scatter(df2, x="Glucose", y="BloodPressure", color="Outcome",
+                                        # color_discrete_sequence=px.colors.qualitative.G10
+                                        color_discrete_map=col_Outcome)
+
+                      )
+
 
 sidebar = html.Div(
     [
@@ -95,7 +118,8 @@ def render_page_content(pathname):
                                                 max=40,
                                                 min=0,
                                                 step=1,
-                                                marks={m:m for m in [x for x in range(41) if x % 5 == 0]},
+                                                marks={m: m for m in [
+                                                    x for x in range(41) if x % 5 == 0]},
                                                 value=[0, 40]
                                                 )
                                 ]),
@@ -106,9 +130,14 @@ def render_page_content(pathname):
         ]
     elif pathname == "/page-2":
         return [
-            html.H1('Diabetes')
-
+            html.H1('Diabetes'),
+            dcc.Tabs(id="tabs", value='tab-t', children=[
+                dcc.Tab(label='Table', value='tab-t'),
+                dcc.Tab(label='Graph', value='tab-g'),
+            ]),
+            html.Div(id='tabs-content')
         ]
+
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
@@ -132,7 +161,39 @@ def update_data(mydropdown, mydropdown2):
     return filter.to_dict("records")
 
 
+@app.callback(Output('tabs-content', 'children'),
+              Input('tabs', 'value'))
+def render_content(tab):
+    if tab == 'tab-t':
+        return table_tab
+    elif tab == 'tab-g':
+        return graph_tab
+
+
 @app.callback(
+    Output('my-table2', 'data'),
+    Input('data', 'children'),
+    State('tabs', 'value'))
+def update_table(data, tab):
+    if tab != 'tab-t':
+        return None
+    dff = pd.read_json(data, orient='split')
+    return dff.to_dict("records")
+
+
+@app.callback(
+    Output('graph2', 'figure'),
+    Input('data', 'children'),
+    State('tabs', 'value'))
+def update_graph2(data, tab):
+
+    df2 = pd.read_json(data, orient='split')
+    return px.scatter(df2, x="Glucose", y="BloodPressure", color="Outcome",
+                      # color_discrete_sequence=px.colors.qualitative.G10
+                      color_discrete_map=col_Outcome)
+
+
+@ app.callback(
     Output('graph', 'figure'),
     Input('rangeSlider', 'value'))
 def update_graph(rangeSlider):
