@@ -5,6 +5,8 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import dash_table
 import pandas as pd
+import numpy as np
+
 from dash.dependencies import Input, Output, State
 app = dash.Dash(__name__, title="2021 Dash Python App",external_stylesheets=[dbc.themes.CERULEAN])
 markdown_text = '''
@@ -21,6 +23,14 @@ df_Pos = df['Pos'].dropna().sort_values().unique()
 opt_Pos = [{'label': x, 'value': x} for x in df_Pos]
 df_Tm = df['Tm'].dropna().sort_values().unique()
 opt_Tm = [{'label': x, 'value': x} for x in df_Tm]
+
+col_Pos = {x: px.colors.qualitative.G10[i] for i,x in enumerate(df_Pos)}
+
+min_pts = min(df['PTS'].dropna())
+max_pts = max(df['PTS'].dropna())
+
+
+
 sidebar = html.Div(
     [
         html.H2("Sidebar", className="display-4"),
@@ -80,7 +90,15 @@ def render_page_content(pathname):
                     ]
                 ),
                 dcc.Tab(label='Plot', children=[
-            
+            html.Label(["Range of values for body weight:", 
+                 dcc.RangeSlider(
+                     max= max_pts,
+                     min= min_pts,
+                     step= (max_pts - min_pts)/10,
+                     marks= {'{}'.format(min_pts + (max_pts - min_pts)/10 * i): '{}'.format(round(min_pts + (max_pts - min_pts)/10 * i,2)) for i in range(10)},
+                     value= [min_pts,max_pts],
+                 )
+        ]),
                 dcc.Graph(id="graph", figure= px.scatter(df, x="PTS", y="MP", color="Pos"))
                 
             
