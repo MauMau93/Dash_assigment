@@ -59,7 +59,7 @@ def render_page_content(pathname):
                         )
                 ]
     elif pathname == "/page-1":
-        return [
+        return [ 
              dcc.Tabs([
                     dcc.Tab(label='Table', children=[
                         html.H1("NBA dataset"),
