@@ -49,8 +49,7 @@ table_tab = dash_table.DataTable(
 graph_tab = html.Div([
     dcc.Graph(id="graph2"
 
-              ),
-    html.Div(id="selected_data")
+              )
 ])
 
 sidebar = html.Div(
@@ -124,8 +123,8 @@ def render_page_content(pathname):
                                                 value=[0, 40]
                                                 )
                                 ]),
-                    dcc.Graph(id="graph", figure=px.scatter(
-                        df, x="PTS", y="MP", color="Pos"))
+                    dcc.Graph(id="graph"),
+                    html.Div(id='selected_data_table')
                 ])
             ])
         ]
@@ -166,14 +165,25 @@ def update_data(mydropdown, mydropdown2):
     return filter.to_dict("records")
 
 
-@ app.callback(
+@app.callback(
     Output('graph', 'figure'),
     Input('rangeSlider', 'value'))
 def update_graph(rangeSlider):
     flt = df[(df['PTS'] >= rangeSlider[0])
              & (df['PTS'] <= rangeSlider[1])]
-    return px.scatter(flt, x="PTS", y="MP", color="Pos")
+    return px.scatter(flt, x="PTS", y="MP", color="Pos", hover_data=['Tm'])
 
+
+@app.callback(
+    Output('selected_data_table', 'children'),
+    Input('graph', 'selectedData'))
+def display_selected_data(selectedData):
+    if selectedData is None:
+        return None
+    names = [o['customdata'][0] for o in selectedData['points']]
+    table = dash_table.DataTable(columns=[{"name": i, "id": i} for i in df.columns], 
+            data=df[df['Tm'].isin(names)].to_dict('records'))
+    return table
 
 @ app.callback(Output('tabs-content', 'children'),
                Input('tabs', 'value'))
@@ -191,37 +201,30 @@ def render_content(tab):
 def update_table(data, tab):
     if tab != 'tab-t':
         return None
-    dff = pd.read_json(data, orient='split')
+    dff= pd.read_json(data, orient='split')
     return dff.to_dict("records")
 
 
-@app.callback(
+@ app.callback(
     Output('graph2', 'figure'),
     Input('data', 'children'),
     State('tabs', 'value'))
 def update_graph2(data, tab):
 
-    df2 = pd.read_json(data, orient='split')
+    df2= pd.read_json(data, orient='split')
     return px.scatter(df2, x="Glucose", y="BloodPressure", color="Outcome",
                       # color_discrete_sequence=px.colors.qualitative.G10
                       color_discrete_map=col_Outcome)
 
 
-@app.callback(Output('data', 'children'),
+@ app.callback(Output('data', 'children'),
               Input('my-dropdown3', 'value'))
 def update(values):
-    flr = df2[df2['Outcome'] == values]
+    flr= df2[df2['Outcome'] == values]
 
     # more generally, this line would be
     # json.dumps(cleaned_df)
     return flr.to_json(date_format='iso', orient='split')
-
-
-@app.callback(
-     Output('selected_data', 'children'),
-     Input('graph2', 'selectedData'))
-def display_selected_data(selectedData):
-    return json.dumps(selectedData, indent=2)
 
 
 if __name__ == '__main__':
