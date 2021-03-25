@@ -6,6 +6,7 @@ import plotly.express as px
 import dash_table
 import pandas as pd
 import numpy as np
+import json
 
 from dash.dependencies import Input, Output, State
 app = dash.Dash(__name__, title="2021 Dash Python App",
@@ -45,10 +46,12 @@ table_tab = dash_table.DataTable(
     columns=[{"name": i, "id": i} for i in df2.columns],
     data=df2.to_dict("records")
 )
-graph_tab = dcc.Graph(id="graph2"
-                      
-                      )
+graph_tab = html.Div([
+    dcc.Graph(id="graph2"
 
+              ),
+    html.Div(id="selected_data")
+])
 
 sidebar = html.Div(
     [
@@ -128,11 +131,12 @@ def render_page_content(pathname):
         ]
     elif pathname == "/page-2":
         return [
-            html.Label(["Select diabetes or not:", 
-            dcc.Dropdown('my-dropdown3', options= opt_Outcome, value= [opt_Outcome[0]['value']])
-        ]),
+            html.Label(["Select diabetes or not:",
+                        dcc.Dropdown('my-dropdown3', options=opt_Outcome,
+                                     value=[opt_Outcome[0]['value']])
+                        ]),
             html.H1('Diabetes'),
-            
+
             dcc.Tabs(id="tabs", value='tab-t', children=[
                 dcc.Tab(label='Table', value='tab-t'),
                 dcc.Tab(label='Graph', value='tab-g'),
@@ -161,6 +165,7 @@ def update_data(mydropdown, mydropdown2):
         filter = df[(df['Pos'] == mydropdown) & (df['Tm'] == mydropdown2)]
     return filter.to_dict("records")
 
+
 @ app.callback(
     Output('graph', 'figure'),
     Input('rangeSlider', 'value'))
@@ -170,21 +175,16 @@ def update_graph(rangeSlider):
     return px.scatter(flt, x="PTS", y="MP", color="Pos")
 
 
-
-
-
-
-
-
-@app.callback(Output('tabs-content', 'children'),
-              Input('tabs', 'value'))
+@ app.callback(Output('tabs-content', 'children'),
+               Input('tabs', 'value'))
 def render_content(tab):
     if tab == 'tab-t':
         return table_tab
     elif tab == 'tab-g':
         return graph_tab
 
-@app.callback(
+
+@ app.callback(
     Output('my-table2', 'data'),
     Input('data', 'children'),
     State('tabs', 'value'))
@@ -193,6 +193,8 @@ def update_table(data, tab):
         return None
     dff = pd.read_json(data, orient='split')
     return dff.to_dict("records")
+
+
 @app.callback(
     Output('graph2', 'figure'),
     Input('data', 'children'),
@@ -204,19 +206,22 @@ def update_graph2(data, tab):
                       # color_discrete_sequence=px.colors.qualitative.G10
                       color_discrete_map=col_Outcome)
 
-@app.callback(Output('data', 'children'), 
-    Input('my-dropdown3', 'value'))
+
+@app.callback(Output('data', 'children'),
+              Input('my-dropdown3', 'value'))
 def update(values):
-     flr = df2[df2['Outcome'] == values]
+    flr = df2[df2['Outcome'] == values]
 
-     # more generally, this line would be
-     # json.dumps(cleaned_df)
-     return flr.to_json(date_format='iso', orient='split')
-
-
+    # more generally, this line would be
+    # json.dumps(cleaned_df)
+    return flr.to_json(date_format='iso', orient='split')
 
 
-
+@app.callback(
+     Output('selected_data', 'children'),
+     Input('graph2', 'selectedData'))
+def display_selected_data(selectedData):
+    return json.dumps(selectedData, indent=2)
 
 
 if __name__ == '__main__':
