@@ -11,12 +11,6 @@ import json
 from dash.dependencies import Input, Output, State
 app = dash.Dash(__name__, title="2021 Dash Python App",
                 external_stylesheets=[dbc.themes.CERULEAN])
-markdown_text = '''
-# Some references
-@@ -9,11 +14,17 @@
-- [Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/docs/components/)
-- [Dash DataTable](https://dash.plotly.com/datatable)
-'''
 
 df_url = 'https://raw.githubusercontent.com/JavierEA1/nbadataset/main/DatosNBA.csv'
 df = pd.read_csv(df_url, sep=';')
@@ -79,23 +73,27 @@ app.layout = html.Div([
     content
 ])
 
-
 @app.callback(
     Output("page-content", "children"),
     [Input("url", "pathname")]
 )
 def render_page_content(pathname):
     if pathname == "/":
-        return [
-            html.H1('Intructions'
-                    )
-        ]
+        return html.Div([
+            html.H1("Instruction"),
+            html.P(["Welcome to this Dash app"]),
+            html.P(["Here you will find two panels: one for the diabetes dataset and the second one regarding NBA dataset."]),
+            html.P(["In the NBA panel, you will have the opportunity to explore the different players are their charateristics. Firstly, you will be able to filter for Player Position and team, and you will visualize the data in a table. Also, you have the opportunity to choose to look at a plot, of this datapoints in two axes: MP and PTS. In this plot, you have the option to filter for a specific interval of body weight. Please note that the plot is interactive, so you can see the information of every point when moving the pointer."]),
+            html.P(["Then, you have the panel for the diabetes dataset. First you can see a table with the information of each datapoint, where you can filter to see the people that has diabetes and the people that does not have diabetes. You also have the chance to check at a plot of Blood Preassure against Glucose, and again you can choose between the people who has and does not have diabetes. Please note that, again, this plot is also interactive, so you can see the information of each datapoint."]),
+            html.P(["This is the glosary for the NBA dataset abreviattions: The significance of the abrevations are: C--Center F--Foward G--Guard Rk -- Rank Pos -- Position Age -- Player's age on February 1 of the season Tm -- Team G -- Games GS -- Games Started MP -- Minutes Played Per Game FG -- Field Goals Per Game FGA -- Field Goal Attempts Per Game FG% -- Field Goal Percentage 3P -- 3-Point Field Goals Per Game 3PA -- 3-Point Field Goal Attempts Per Game 3P% -- 3-Point Field Goal Percentage 2P -- 2-Point Field Goals Per Game 2PA -- 2-Point Field Goal Attempts Per Game 2P% -- 2-Point Field Goal Percentage eFG% -- Effective Field Goal Percentage This statistic adjusts for the fact that a 3-point field goal is worth one more point than a 2-point field goal. FT -- Free Throws Per Game FTA -- Free Throw Attempts Per Game FT% -- Free Throw Percentage ORB -- Offensive Rebounds Per Game DRB -- Defensive Rebounds Per Game TRB -- Total Rebounds Per Game AST -- Assists Per Game STL -- Steals Per Game BLK -- Blocks Per Game TOV -- Turnovers Per Game PF -- Personal Fouls Per Game PTS -- Points Per Game"]),
+
+
+        ])
     elif pathname == "/page-1":
         return [
             dcc.Tabs([
                 dcc.Tab(label='Table', children=[
                      html.H1("NBA dataset"),
-                     dcc.Markdown(markdown_text),
                      html.Label(["Select Position of the player",
                                  dcc.Dropdown(
                                      'mydropdown', options=opt_Pos, value=opt_Pos[0]['value'])
@@ -148,7 +146,7 @@ def render_page_content(pathname):
         [
             html.H1("404: Not found", className="text-danger"),
             html.Hr(),
-            html.P(f"The pathname {pathname} was not recognised..."),
+            html.P(f"The pathname {pathname} was not recognised...")
         ]
     )
 
