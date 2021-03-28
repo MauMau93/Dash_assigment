@@ -169,7 +169,7 @@ def update_data(mydropdown, mydropdown2):
 def update_graph(rangeSlider):
     flt = df[(df['PTS'] >= rangeSlider[0])
              & (df['PTS'] <= rangeSlider[1])]
-    return px.scatter(flt, x="PTS", y="MP", color="Pos", hover_data=['Tm'])
+    return px.scatter(flt, x="PTS", y="MP", color="Pos", hover_data=['Player'])
 
 
 @app.callback(
@@ -180,7 +180,7 @@ def display_selected_data(selectedData):
         return None
     names = [o['customdata'][0] for o in selectedData['points']]
     table = dash_table.DataTable(columns=[{"name": i, "id": i} for i in df.columns], 
-            data=df[df['Tm'].isin(names)].to_dict('records'))
+            data=df[df['Player'].isin(names)].to_dict('records'))
     return table
 
 @ app.callback(Output('tabs-content', 'children'),
